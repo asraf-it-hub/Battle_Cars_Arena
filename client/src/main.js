@@ -143,7 +143,7 @@ let socket = null;
 
 function getServerURL() {
   // PRODUCTION: Set your Render server URL here
-  const SERVER_URL = 'https://your-render-server-url.onrender.com';
+  const SERVER_URL = 'https://battle-cars-arena-server.onrender.com';
   
   // If SERVER_URL is still the placeholder, use localhost for development
   if (SERVER_URL.includes('your-render-server-url')) {
