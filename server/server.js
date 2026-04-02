@@ -23,8 +23,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL || '*',
-    methods: ['GET', 'POST'],
-    credentials: true
+    methods: ['GET', 'POST']
   },
   pingTimeout: 60000,
   pingInterval: 25000
@@ -470,8 +469,8 @@ io.on('connection', (socket) => {
     
     const room = playerInfo.room;
     if (room.config.creator !== socket.id) return;
-    if (room.players.size < 2) {
-      socket.emit('error', { message: 'Need at least 2 players' });
+    if (room.players.size < 1) {
+      socket.emit('error', { message: 'Need at least 1 player' });
       return;
     }
     

@@ -359,7 +359,7 @@ function updateLobbyCreatorUI() {
   
   if (startBtn) {
     const playerCount = UI.playersList.size;
-    if (playerCount >= 2 && UI.isCreator) {
+    if (playerCount >= 1 && UI.isCreator) {
       startBtn.disabled = false;
       startBtn.classList.remove('disabled');
       document.getElementById('waiting-msg').textContent = `${playerCount} players ready`;
