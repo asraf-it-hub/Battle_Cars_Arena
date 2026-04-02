@@ -142,21 +142,21 @@ function hideAllModals() {
 let socket = null;
 
 function getServerURL() {
-  // For production, use environment variable (set in Vercel dashboard)
-  if (process.env.SERVER_URL) {
-    return process.env.SERVER_URL;
+  // PRODUCTION: Set your Render server URL here
+  const SERVER_URL = 'https://your-render-server-url.onrender.com';
+  
+  // If SERVER_URL is still the placeholder, use localhost for development
+  if (SERVER_URL.includes('your-render-server-url')) {
+    const hostname = window.location.hostname;
+    const port = window.location.port || '3000';
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${hostname}:${port}`;
+    }
+    return window.location.origin;
   }
   
-  // For local development, use localhost
-  const hostname = window.location.hostname;
-  const port = window.location.port || '3000';
-  
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return `http://${hostname}:${port}`;
-  }
-  
-  // Fallback: try to use same origin (won't work if client/server are on different domains)
-  return window.location.origin;
+  return SERVER_URL;
 }
 
 function connectToServer() {
