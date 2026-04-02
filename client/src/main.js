@@ -142,7 +142,12 @@ function hideAllModals() {
 let socket = null;
 
 function getServerURL() {
-  // Use localhost for development, or environment variable for production
+  // For production, use environment variable (set in Vercel dashboard)
+  if (process.env.SERVER_URL) {
+    return process.env.SERVER_URL;
+  }
+  
+  // For local development, use localhost
   const hostname = window.location.hostname;
   const port = window.location.port || '3000';
   
@@ -150,7 +155,7 @@ function getServerURL() {
     return `http://${hostname}:${port}`;
   }
   
-  // For production, use the same origin
+  // Fallback: try to use same origin (won't work if client/server are on different domains)
   return window.location.origin;
 }
 
