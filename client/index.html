@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Cars Arena | Multiplayer Car Battle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <!-- Background particles canvas -->
+    <canvas id="bg-particles"></canvas>
+    
+    <!-- Game container (Phaser renders here) -->
+    <div id="game-container"></div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-overlay">
+        <!-- ==================== HOME SCREEN ==================== -->
+        <div id="home-screen" class="screen active">
+            <div class="glass-card main-card">
+                <div class="logo-area">
+                    <div class="car-icon"></div>
+                    <h1 class="glow-text">BATTLE CARS <span>ARENA</span></h1>
+                    <p class="subtitle">Ultimate Multiplayer Drift Combat</p>
+                </div>
+                
+                <div class="input-group">
+                    <label for="player-name"><i class="icon-user"></i> ENTER YOUR NAME</label>
+                    <input type="text" id="player-name" placeholder="Enter your callsign..." maxlength="15" autocomplete="off">
+                </div>
+
+                <div class="button-group">
+                    <button id="play-online-btn" class="btn primary-btn">
+                        <span class="btn-icon">▶</span> PLAY ONLINE
+                    </button>
+                    <div class="btn-row">
+                        <button id="create-room-btn" class="btn secondary-btn">
+                            <span class="btn-icon">+</span> CREATE ROOM
+                        </button>
+                        <button id="join-room-btn" class="btn secondary-btn">
+                            <span class="btn-icon">→</span> JOIN ROOM
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <span class="version">v1.0.0</span>
+                    <button id="how-to-play-btn" class="link-btn">How to Play</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== LOBBY SCREEN ==================== -->
+        <div id="lobby-screen" class="screen">
+            <div class="glass-card lobby-card">
+                <div class="lobby-header">
+                    <div class="room-info">
+                        <span class="label">ROOM CODE</span>
+                        <span id="room-code-display" class="code">######</span>
+                        <button id="copy-code-btn" class="icon-btn" title="Copy code">📋</button>
+                    </div>
+                    <button id="leave-lobby-btn" class="btn-icon close-btn" title="Leave">✕</button>
+                </div>
+                
+                <div class="lobby-content">
+                    <!-- Players List -->
+                    <div class="section players-section">
+                        <div class="section-header">
+                            <h3>PLAYERS</h3>
+                            <span class="player-count"><span id="player-count">1</span>/<span id="max-players-display">24</span></span>
+                        </div>
+                        <ul id="players-list" class="players-list">
+                            <li class="player-item empty">Waiting for players...</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Room Settings (visible to creator only) -->
+                    <div id="room-settings" class="section settings-section" style="display: none;">
+                        <h3>GAME SETTINGS</h3>
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label>MAX PLAYERS</label>
+                                <select id="max-players-select">
+                                    <option value="2">2 Players</option>
+                                    <option value="4" selected>4 Players</option>
+                                    <option value="10">10 Players</option>
+                                    <option value="16">16 Players</option>
+                                    <option value="24">24 Players</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label>GAME MODE</label>
+                                <select id="game-mode-select">
+                                    <option value="time">Time Limit</option>
+                                    <option value="kills">Kill Limit</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label id="limit-value-label">TIME (MIN)</label>
+                                <input type="number" id="limit-value-input" min="1" max="60" value="10">
+                            </div>
+                            <div class="setting-item">
+                                <label>MAP</label>
+                                <select id="map-select">
+                                    <option value="random">Random</option>
+                                    <option value="arena">Arena</option>
+                                    <option value="desert">Desert</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="apply-settings-btn" class="btn secondary-btn small">Apply Settings</button>
+                    </div>
+                </div>
+
+                <div class="lobby-footer">
+                    <button id="start-game-btn" class="btn primary-btn block disabled" disabled>
+                        <span class="btn-icon">⚔</span> START BATTLE
+                    </button>
+                    <p class="waiting-msg" id="waiting-msg">Minimum 2 players required to start</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== CREATE ROOM MODAL ==================== -->
+        <div id="create-room-modal" class="modal">
+            <div class="glass-card modal-card">
+                <h3>Create Custom Room</h3>
+                <div class="modal-content">
+                    <div class="setting-item">
+                        <label>Max Players</label>
+                        <select id="create-max-players">
+                            <option value="2">2 Players</option>
+                            <option value="4" selected>4 Players</option>
+                            <option value="10">10 Players</option>
+                            <option value="16">16 Players</option>
+                            <option value="24">24 Players</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Game Type</label>
+                        <select id="create-game-type">
+                            <option value="time" selected>Time Limit</option>
+                            <option value="kills">Kill Limit</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label id="create-limit-label">Time (minutes)</label>
+                        <input type="number" id="create-limit-value" min="1" max="60" value="10">
+                    </div>
+                    <div class="setting-item">
+                        <label>Map</label>
+                        <select id="create-map">
+                            <option value="random">Random</option>
+                            <option value="arena">Arena</option>
+                            <option value="desert">Desert</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancel-create-btn" class="btn secondary-btn">Cancel</button>
+                    <button id="confirm-create-btn" class="btn primary-btn">Create Room</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== JOIN ROOM MODAL ==================== -->
+        <div id="join-modal" class="modal">
+             <div class="glass-card modal-card">
+                <h3>Join Private Room</h3>
+                <div class="input-group">
+                    <label for="join-room-code">ROOM CODE</label>
+                    <input type="text" id="join-room-code" placeholder="Enter 6-digit code..." maxlength="6" autocomplete="off" style="text-transform: uppercase; text-align: center; font-size: 1.5rem; letter-spacing: 8px;">
+                </div>
+                <div class="modal-actions">
+                    <button id="cancel-join-btn" class="btn secondary-btn">Cancel</button>
+                    <button id="confirm-join-btn" class="btn primary-btn">Join Room</button>
+                </div>
+             </div>
+        </div>
+
+        <!-- ==================== HOW TO PLAY MODAL ==================== -->
+        <div id="how-to-play-modal" class="modal">
+            <div class="glass-card modal-card large">
+                <div class="modal-header">
+                    <h3>How to Play</h3>
+                    <button id="close-howto-btn" class="btn-icon">✕</button>
+                </div>
+                <div class="help-content">
+                    <div class="help-section">
+                        <h4>Controls</h4>
+                        <ul>
+                            <li><strong>W / Up Arrow</strong> - Accelerate</li>
+                            <li><strong>S / Down Arrow</strong> - Brake / Slow Down</li>
+                            <li><strong>A / D / Left / Right</strong> - Steer</li>
+                            <li><strong>Mouse</strong> - Aim direction</li>
+                            <li><strong>Left Click</strong> - Fire weapon</li>
+                            <li><strong>M</strong> - Place mine (when equipped)</li>
+                            <li><strong>Space</strong> - Drift</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h4>Weapons</h4>
+                        <p>Collect weapon crates scattered around the map. Weapon types:</p>
+                        <div class="weapon-types">
+                            <div class="weapon-type auto">
+                                <span class="badge">AUTO-AIM</span>
+                                <span>Machine Gun, SMG, Shotgun, Laser, Dual Gun</span>
+                            </div>
+                            <div class="weapon-type manual">
+                                <span class="badge">MANUAL-AIM</span>
+                                <span>Rocket, Bomb, Grenade, Cannon, Mine</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="help-section">
+                        <h4>Objective</h4>
+                        <p>Destroy enemy cars to score kills. Win by having the most kills when time runs out, or reach the kill limit first!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== GAME HUD ==================== -->
+        <div id="hud" class="hud">
+            <!-- Top Left: Player info -->
+            <div class="hud-left">
+                <div class="player-info glass-pill">
+                    <div class="health-bar-container">
+                        <div id="health-bar-fill" class="health-fill" style="width: 100%;"></div>
+                    </div>
+                    <span id="health-value">100</span>
+                    <span id="player-name-hud">PLAYER</span>
+                    <span id="weapon-display" class="weapon-badge">Machine Gun</span>
+                </div>
+            </div>
+            
+            <!-- Top Center: Timer -->
+            <div class="hud-center">
+                <div class="timer-display glass-pill">
+                    <span id="game-timer">10:00</span>
+                </div>
+            </div>
+            
+            <!-- Top Right: Scoreboard -->
+            <div id="scoreboard" class="glass-card scoreboard">
+                <div class="scoreboard-header">
+                    <h3>SCOREBOARD</h3>
+                    <button id="toggle-scoreboard" class="icon-btn">−</button>
+                </div>
+                <div id="scoreboard-content" class="scoreboard-content">
+                    <div class="score-header">
+                        <span></span>
+                        <span>PLAYER</span>
+                        <span>K</span>
+                        <span>D</span>
+                    </div>
+                    <ul id="score-list" class="score-list">
+                        <!-- Scores will be dynamically added -->
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Bottom Center: Killfeed -->
+            <div id="killfeed" class="killfeed">
+                <!-- Kill messages appear here -->
+            </div>
+        </div>
+
+        <!-- ==================== GAME OVER SCREEN ==================== -->
+        <div id="game-over-screen" class="screen">
+            <div class="glass-card result-card">
+                <div class="result-header">
+                    <h1 class="glow-text">GAME <span>OVER</span></h1>
+                    <p class="result-subtitle">The battle has ended!</p>
+                </div>
+                
+                <div class="winner-section">
+                    <span class="winner-label">WINNER</span>
+                    <div class="winner-info">
+                        <div id="winner-icon" class="winner-icon"></div>
+                        <h2 id="winner-name">Waiting...</h2>
+                        <span id="winner-kills" class="winner-stats">0 kills</span>
+                    </div>
+                </div>
+                
+                <div class="your-stats">
+                    <h3>Your Performance</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-label">Kills</span>
+                            <span id="final-kills" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Deaths</span>
+                            <span id="final-deaths" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Rank</span>
+                            <span id="final-rank" class="stat-value">#1</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="leaderboard-section">
+                    <h3>Leaderboard</h3>
+                    <div id="leaderboard" class="leaderboard">
+                        <!-- Leaderboard entries will be added here -->
+                    </div>
+                </div>
+                
+                <div class="result-actions">
+                    <button id="play-again-btn" class="btn primary-btn">
+                        <span class="btn-icon">↻</span> PLAY AGAIN
+                    </button>
+                    <button id="back-to-menu-btn" class="btn secondary-btn">
+                        Back to Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== ERROR TOAST ==================== -->
+        <div id="error-toast" class="error-toast"></div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
