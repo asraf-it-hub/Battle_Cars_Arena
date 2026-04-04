@@ -499,14 +499,23 @@ function startGame(data) {
   UI.health = 100;
   UI.weapon = 'machine_gun';
   
+  // Setup global game state for the Phaser scene to read
+  window.gameState = {
+    socket: socket,
+    playerData: UI.playerData
+  };
+
   // Add game scene if not already added
   if (!game.scene.getScene('GameScene')) {
-    game.scene.add('GameScene', GameScene, true);
+    game.scene.add('GameScene', GameScene, false);
     gameScene = game.scene.getScene('GameScene');
   }
   
-  // Start the game scene
-  gameScene.scene.start(mapType);
+  // Start the game scene by its registered key, and pass the mapType as data
+  gameScene.scene.start('GameScene', mapType);
+  
+  // Display the game UI overlay
+  showHUD();
   
   // Update HUD
   document.getElementById('player-name-hud').textContent = UI.playerName;
