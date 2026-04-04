@@ -49,7 +49,7 @@ const config = {
       debug: false
     }
   },
-  scene: [],
+  scene: [GameScene],
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.NO_CENTER
@@ -516,13 +516,12 @@ function startGame(data) {
     playersList: Array.from(UI.playersList.values())
   };
 
-  // Add game scene if not already added
-  if (!game.scene.getScene('GameScene')) {
-    game.scene.add('GameScene', GameScene, false);
+  // Ensure we have a reference to the active scene
+  if (!gameScene) {
     gameScene = game.scene.getScene('GameScene');
   }
   
-  // Start the game scene by its registered key, and pass the mapType as data
+  // Restart the dormant scene passing the mapType
   game.scene.start('GameScene', mapType);
   
   // Display the game UI overlay
