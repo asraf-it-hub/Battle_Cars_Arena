@@ -528,7 +528,8 @@ export default class GameScene extends Phaser.Scene {
     this.localPlayer.setDrag(0.95);
     
     // Get color index from hex
-    const colorHex = playerData?.color?.toString(16).padStart(6, '0') || '6366F1';
+    const colorVal = playerData?.color ?? 0x6366F1;
+    const colorHex = colorVal.toString(16).padStart(6, '0');
     const colorIndex = this.getPlayerColorIndex(colorHex);
     this.localPlayer.setTexture(`car-${colorIndex}`);
     
@@ -1297,7 +1298,8 @@ export default class GameScene extends Phaser.Scene {
     player.setData('alive', true);
     
     // Set correct color
-    const colorHex = data.color?.toString(16).padStart(6, '0') || 'ef4444';
+    const colorVal = data.color ?? 0xef4444;
+    const colorHex = colorVal.toString(16).padStart(6, '0');
     const colorIndex = this.getPlayerColorIndex(colorHex);
     player.setTexture(`car-${colorIndex}`);
     
