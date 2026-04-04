@@ -412,7 +412,7 @@ io.on('connection', (socket) => {
     // Create new public room if none available
     if (!targetRoom) {
       const roomCode = generateRoomCode();
-      targetRoom = createRoom(roomCode, { isPrivate: false, maxPlayers: 24 });
+      targetRoom = createRoom(roomCode, { isPrivate: false, maxPlayers: 24, creator: socket.id });
     }
 
     joinRoom(socket, targetRoom.code, name);
@@ -772,6 +772,9 @@ function joinRoom(socket, roomCode, name) {
   // If game is already started, send state
   if (room.gameState.started) {
     socket.emit('gameStarted', { map: room.config.map });
+  } else if (!room.config.isPrivate && room.players.size >= room.config.maxPlayers) {
+    // Auto-start online room when full
+    startGame(roomCode);
   }
 }
 
