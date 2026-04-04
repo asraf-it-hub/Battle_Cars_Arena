@@ -38,7 +38,7 @@ const WEAPON_TYPES = {
 // PHASER GAME CONFIGURATION
 // =====================================================
 const config = {
-  type: Phaser.AUTO,
+  type: Phaser.CANVAS,
   parent: 'game-container',
   width: window.innerWidth,
   height: window.innerHeight,
@@ -499,7 +499,7 @@ function showError(message) {
 // GAME MANAGEMENT
 // =====================================================
 function startGame(data) {
-  console.log('Starting game with map:', data.map);
+  console.log('startGame called with data:', data);
   
   hideAllScreens();
   
@@ -522,6 +522,7 @@ function startGame(data) {
   }
   
   // Restart the dormant scene passing the mapType
+  console.log('Restarting GameScene with map:', mapType);
   game.scene.start('GameScene', mapType);
   
   // Display the game UI overlay

@@ -59,114 +59,110 @@ export default class GameScene extends Phaser.Scene {
   // =====================================================
   // PRELOAD - Create all textures and load assets
   // =====================================================
-  preload() {
-    this.createAllTextures();
-  }
-
-  // =====================================================
-  // INIT - Initialize scene with map data
-  // =====================================================
   init(mapType) {
-    this.mapType = mapType || 'arena';
-    this.socket = window.gameState?.socket || null;
+    try {
+      console.log('--- GameScene: Initializing ---');
+      this.mapType = mapType || 'arena';
+      this.socket = window.gameState?.socket || null;
+      console.log('Map type set to:', this.mapType);
+    } catch (e) {
+      console.error('CRITICAL ERROR in GameScene init:', e);
+    }
   }
 
-  // =====================================================
-  // CREATE - Setup game objects, input, and collisions
-  // =====================================================
+  preload() {
+    try {
+      console.log('--- GameScene: Preloading assets ---');
+      this.createAllTextures();
+      console.log('Preload complete');
+    } catch (e) {
+      console.error('CRITICAL ERROR in GameScene preload:', e);
+    }
+  }
+
   create() {
-    // Set world bounds
-    this.physics.world.setBounds(0, 0, 2000, 2000);
-    this.cameras.main.setBounds(0, 0, 2000, 2000);
-    
-    // Get map configuration
-    const mapConfigs = {
-      arena: {
-        bgColors: [0x0F172A, 0x1E293B],
-        wallColor: 0x374151,
-        obstacleColor: 0x475569,
-        wallThickness: 20
-      },
-      desert: {
-        bgColors: [0x78350F, 0x92400E],
-        wallColor: 0xA16207,
-        obstacleColor: 0x854D0E,
-        wallThickness: 20
-      }
-    };
-    
-    this.mapConfig = mapConfigs[this.mapType] || mapConfigs.arena;
-    
-    // Create background
-    this.createBackground();
-    
-    // Create walls and obstacles
-    this.createMap();
-    
-    // Create player
-    this.createLocalPlayer();
-    
-    // Create bullet group
-    this.createBulletGroup();
-    
-    // Create loot group
-    this.createLootGroup();
-    
-    // Create explosions group
-    this.createExplosionsGroup();
-    
-    // Create mine group
-    this.createMineGroup();
-    
-    // Setup input handlers
-    this.setupInput();
-    
-    // Setup socket handlers
-    this.setupSocketHandlers();
-    
-    // Create UI elements
-    this.createGameUI();
-    
-    // Add existing remote players from game state
-    const existingPlayers = window.gameState?.playersList || [];
-    existingPlayers.forEach(p => {
-      if (p.id !== this.socket?.id) {
-        this.addRemotePlayer(p);
-      }
-    });
-    
-    // Auto-aim line
-    this.aimLine = this.add.graphics();
-    this.aimLine.setDepth(100);
-    
-    // Minimap
-    this.createMinimap();
+    try {
+      console.log('--- GameScene: Creating game world ---');
+      
+      // Force Render Test - Draw a red circle to verify canvas is active
+      this.add.circle(400, 300, 100, 0xff0000).setScrollFactor(0).setDepth(9999);
+      console.log('Force render test circle added');
+      
+      // Set world bounds
+      this.physics.world.setBounds(0, 0, 2000, 2000);
+      this.cameras.main.setBounds(0, 0, 2000, 2000);
+      console.log('World bounds set');
+      
+      // Get map configuration
+      const mapConfigs = {
+        arena: {
+          bgColors: [0x0F172A, 0x1E293B],
+          wallColor: 0x374151,
+          obstacleColor: 0x475569,
+          wallThickness: 20
+        },
+        desert: {
+          bgColors: [0x78350F, 0x92400E],
+          wallColor: 0xA16207,
+          obstacleColor: 0x854D0E,
+          wallThickness: 20
+        }
+      };
+      
+      this.mapConfig = mapConfigs[this.mapType] || mapConfigs.arena;
+      console.log('Using map config:', this.mapConfig);
+      
+      this.createBackground();
+      console.log('Background created');
+      
+      this.createMap();
+      console.log('Map built');
+      
+      this.createLocalPlayer();
+      console.log('Local player spawned');
+      
+      this.createBulletGroup();
+      this.createLootGroup();
+      this.createExplosionsGroup();
+      this.createMineGroup();
+      console.log('Game groups initialized');
+      
+      this.setupInput();
+      this.setupSocketHandlers();
+      this.createGameUI();
+      console.log('Input and UI setup complete');
+      
+      // Add existing remote players from game state
+      const existingPlayers = window.gameState?.playersList || [];
+      existingPlayers.forEach(p => {
+        if (p.id !== this.socket?.id) {
+          this.addRemotePlayer(p);
+        }
+      });
+      console.log('Remote players loaded:', existingPlayers.length);
+      
+      this.aimLine = this.add.graphics();
+      this.aimLine.setDepth(100);
+      
+      this.createMinimap();
+      console.log('--- GameScene: Create phase FINISHED ---');
+    } catch (e) {
+      console.error('CRITICAL ERROR in GameScene create:', e);
+    }
   }
 
-  // =====================================================
-  // CREATE TEXTURES
-  // =====================================================
   createAllTextures() {
-    // Car texture (player)
     this.createCarTexture();
-    
-    // Bullet textures for each weapon type
     this.createBulletTextures();
-    
-    // Loot crate texture
     this.createLootTexture();
-    
-    // Explosion texture
     this.createExplosionTexture();
-    
-    // Mine texture
     this.createMineTexture();
-    
-    // Wall and obstacle textures
     this.createWallTextures();
   }
 
   createCarTexture() {
+    if (this.textures.exists('car-default')) return;
+    
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
     
     // Generate different colored cars
@@ -186,6 +182,7 @@ export default class GameScene extends Phaser.Scene {
     ];
     
     colors.forEach((color, i) => {
+      if (this.textures.exists(`car-${i}`)) return;
       graphics.clear();
       
       // Car shadow
@@ -236,24 +233,29 @@ export default class GameScene extends Phaser.Scene {
       graphics.generateTexture(`car-${i}`, 52, 32);
     });
     
-    // Default car texture
-    graphics.clear();
-    graphics.fillStyle(0x6366F1, 1);
-    graphics.fillRoundedRect(0, 0, 50, 30, 6);
-    graphics.fillStyle(0x818CF8, 1);
-    graphics.fillRect(5, 5, 35, 3);
-    graphics.fillRect(5, 22, 35, 3);
-    graphics.fillStyle(0x1E293B, 1);
-    graphics.fillRoundedRect(30, 6, 15, 18, 3);
-    graphics.generateTexture('car-default', 50, 30);
+    if (!this.textures.exists('car-default')) {
+      graphics.clear();
+      graphics.fillStyle(0x6366F1, 1);
+      graphics.fillRoundedRect(0, 0, 50, 30, 6);
+      graphics.fillStyle(0x818CF8, 1);
+      graphics.fillRect(5, 5, 35, 3);
+      graphics.fillRect(5, 22, 35, 3);
+      graphics.fillStyle(0x1E293B, 1);
+      graphics.fillRoundedRect(30, 6, 15, 18, 3);
+      graphics.generateTexture('car-default', 50, 30);
+    }
     
     graphics.destroy();
   }
 
   createBulletTextures() {
+    const firstWeaponKey = Object.keys(this.weapons)[0];
+    if (this.textures.exists(`${firstWeaponKey}-bullet`)) return;
+    
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
     
     Object.entries(this.weapons).forEach(([key, weapon]) => {
+      if (this.textures.exists(`${key}-bullet`)) return;
       graphics.clear();
       const color = weapon.color;
       
@@ -280,6 +282,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createLootTexture() {
+    if (this.textures.exists('loot-crate')) return;
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
     
     // Glow background
@@ -318,6 +321,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createExplosionTexture() {
+    if (this.textures.exists('explosion')) return;
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
     
     graphics.fillStyle(0xF59E0B, 1);
@@ -334,6 +338,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createMineTexture() {
+    if (this.textures.exists('mine')) return;
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
     
     // Mine body
@@ -364,6 +369,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createWallTextures() {
+    if (this.textures.exists('wall')) return;
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
     
     // Wall texture
@@ -405,7 +411,7 @@ export default class GameScene extends Phaser.Scene {
       gridLines.push(
         this.add.line(0, 0, x, 0, x, 2000, this.mapConfig.bgColors[1])
           .setOrigin(0)
-          .setLineWidth(1)
+          .setStrokeStyle(1, this.mapConfig.bgColors[1])
       );
     }
     
@@ -413,7 +419,7 @@ export default class GameScene extends Phaser.Scene {
       gridLines.push(
         this.add.line(0, 0, 0, y, 2000, y, this.mapConfig.bgColors[1])
           .setOrigin(0)
-          .setLineWidth(1)
+          .setStrokeStyle(1, this.mapConfig.bgColors[1])
       );
     }
     
@@ -673,7 +679,7 @@ export default class GameScene extends Phaser.Scene {
     
     // Firing on click
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.leftButtonPressed()) {
+      if (pointer.leftButtonDown()) {
         this.fireWeapon();
       }
     });
