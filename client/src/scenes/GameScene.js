@@ -492,6 +492,15 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
+  getPlayerColorIndex(colorHex) {
+    const rawColorIndex = [
+      '6366f1', '8b5cf6', 'ef4444', 'f59e0b',
+      '10b981', '06b6d4', 'ec4899', '14b8a6',
+      'f97316', '64748b', '84cc16', '22d3ee'
+    ].indexOf(colorHex.toLowerCase());
+    return rawColorIndex >= 0 ? rawColorIndex : 'default';
+  }
+
   // =====================================================
   // CREATE PLAYER
   // =====================================================
