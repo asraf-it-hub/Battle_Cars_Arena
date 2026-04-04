@@ -127,6 +127,14 @@ export default class GameScene extends Phaser.Scene {
     // Create UI elements
     this.createGameUI();
     
+    // Add existing remote players from game state
+    const existingPlayers = window.gameState?.playersList || [];
+    existingPlayers.forEach(p => {
+      if (p.id !== this.socket?.id) {
+        this.addRemotePlayer(p);
+      }
+    });
+    
     // Auto-aim line
     this.aimLine = this.add.graphics();
     this.aimLine.setDepth(100);
@@ -1427,6 +1435,9 @@ export default class GameScene extends Phaser.Scene {
   }
 
   resetState(players) {
+    // Prevent crashes if scene hasn't finished booting yet
+    if (!this.localPlayer || !this.bullets || !this.lootSpots) return;
+    
     // Clear remote players
     this.remotePlayers.forEach((player, id) => player.destroy());
     this.remotePlayers.clear();

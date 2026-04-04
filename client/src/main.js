@@ -309,7 +309,17 @@ function setupSocketHandlers(socket) {
 
   // State reset
   socket.on('stateReset', (players) => {
-    if (gameScene) {
+    // Keep global state updated before scene initializes
+    if (window.gameState) {
+      window.gameState.playersList = players;
+      const myData = players.find(p => p.id === socket.id);
+      if (myData) {
+        window.gameState.playerData = myData;
+        UI.playerData = myData;
+      }
+    }
+    
+    if (gameScene && typeof gameScene.resetState === 'function') {
       gameScene.resetState(players);
     }
   });
@@ -502,7 +512,8 @@ function startGame(data) {
   // Setup global game state for the Phaser scene to read
   window.gameState = {
     socket: socket,
-    playerData: UI.playerData
+    playerData: UI.playerData,
+    playersList: Array.from(UI.playersList.values())
   };
 
   // Add game scene if not already added
@@ -512,7 +523,7 @@ function startGame(data) {
   }
   
   // Start the game scene by its registered key, and pass the mapType as data
-  gameScene.scene.start('GameScene', mapType);
+  game.scene.start('GameScene', mapType);
   
   // Display the game UI overlay
   showHUD();
